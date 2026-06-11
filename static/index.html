@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业私有知识问答 - 重庆工程学院</title>
+    <style>
+        /* ============================================
+               全局样式重置与基础设置
+            ============================================ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #3730a3;
+            --primary-bg: #eef2ff;
+            --bg: #f0f2f5;
+            --sidebar-bg: #1a1d29;
+            --sidebar-hover: #262a3a;
+            --sidebar-active: #4f46e5;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --border: #e8eaed;
+            --user-bubble: #4f46e5;
+            --user-text: #ffffff;
+            --bot-bubble: #ffffff;
+            --bot-text: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 28px rgba(0,0,0,0.12);
+            --radius: 10px;
+            --radius-sm: 6px;
+            --radius-bubble: 14px;
+            --transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        /* ============================================
+               整体布局
+            ============================================ */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ============================================
+               侧边栏 - 会话列表
+            ============================================ */
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: var(--sidebar-bg);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .sidebar-header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header h1 .logo-icon {
+            width: 26px;
+            height: 26px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header p {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
+        }
+
+        .sidebar-actions {
+            padding: 10px 14px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-new-chat {
+            flex: 1;
+            padding: 8px 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-new-chat:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-reload {
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-reload:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        .btn-reload.loading {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .session-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 10px;
+        }
+
+        .session-list::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .session-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px;
+        }
+
+        .session-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 2px;
+        }
+
+        .session-item:hover {
+            background: var(--sidebar-hover);
+        }
+
+        .session-item.active {
+            background: var(--sidebar-active);
+        }
+
+        .session-item .session-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .session-item .session-meta {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .session-empty {
+            text-align: center;
+            padding: 32px 16px;
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+        }
+
+        .session-empty .empty-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.4;
+        }
+
+        .sidebar-footer {
+            padding: 10px 14px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+        }
+
+        /* ============================================
+               主聊天区域
+            ============================================ */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: var(--bg);
+        }
+
+        .chat-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .chat-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-header .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .chat-header .status-dot.loading {
+            background: var(--warning);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .chat-header .header-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .chat-header .header-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .header-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--primary-bg);
+            color: var(--primary);
+        }
+
+        .header-badge.mock {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .btn-settings {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            line-height: 1;
+        }
+
+        .btn-settings:hover {
+            background: var(--bg);
+        }
+
+        /* ============================================
+               消息列表区域
+            ============================================ */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: var(--bg);
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 48px 20px 32px;
+        }
+
+        .welcome-message .welcome-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+
+        .welcome-message h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-message p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            max-width: 460px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .suggestion-chip {
+            padding: 6px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .suggestion-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-bg);
+        }
+
+        /* ============================================
+               消息气泡
+            ============================================ */
+        .message {
+            display: flex;
+            margin-bottom: 14px;
+            animation: fadeIn 0.25s ease;
+            align-items: flex-start;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message.bot .avatar {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: #fff;
+            margin-right: 8px;
+        }
+
+        .message.user .avatar {
+            background: var(--sidebar-bg);
+            color: #fff;
+            margin-left: 8px;
+            order: 1;
+        }
+
+        .message .bubble {
+            max-width: 64%;
+            padding: 10px 14px;
+            border-radius: var(--radius-bubble);
+            font-size: 13px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.user .bubble {
+            background: var(--user-bubble);
+            color: var(--user-text);
+            border-bottom-right-radius: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message.bot .bubble {
+            background: var(--bot-bubble);
+            color: var(--bot-text);
+            border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .message .bubble .message-content {
+            word-break: break-word;
+        }
+
+        .message .bubble .message-content p {
+            margin-bottom: 6px;
+        }
+
+        .message .bubble .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 消息元数据 - 紧凑标签 */
+        .message-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .message-meta .tag {
+            padding: 1px 7px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .tag-intent {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .tag-tool {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        /* ============================================
+               打字指示器
+            ============================================ */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 0;
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-light);
+            border-radius: 50%;
+            animation: typing 1.4s ease-in-out infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+            30% { transform: translateY(-5px); opacity: 0.8; }
+        }
+
+        /* ============================================
+               输入区域 - 更紧凑
+            ============================================ */
+        .input-area {
+            padding: 12px 20px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--card-bg);
+            flex-shrink: 0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 6px 10px;
+            transition: var(--transition);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79,70,229,0.08);
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text);
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            min-height: 22px;
+            max-height: 100px;
+        }
+
+        .input-wrapper textarea::placeholder {
+            color: var(--text-light);
+        }
+
+        .btn-send {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-send:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+
+        .btn-send svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            padding: 0 4px;
+            font-size: 10px;
+            color: var(--text-light);
+        }
+
+        /* ============================================
+               通知提示
+            ============================================ */
+        .toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 2000;
+            box-shadow: var(--shadow-md);
+            animation: slideIn 0.25s ease;
+            display: none;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ============================================
+               消息代码块美化
+            ============================================ */
+        .message .bubble code {
+            background: rgba(0,0,0,0.06);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .message .bubble pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            margin: 6px 0;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .message .bubble pre code {
+            background: none;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        /* ============================================
+               响应式
+            ============================================ */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .sidebar-toggle {
+                display: flex !important;
+            }
+
+            .message .bubble {
+                max-width: 85%;
+            }
+
+            .messages-container {
+                padding: 12px 14px;
+            }
+
+            .input-area {
+                padding: 10px 14px 14px;
+            }
+
+            .chat-header {
+                padding: 10px 14px;
+            }
+        }
+
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text);
+            padding: 2px;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 99;
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
+        }
+
+        /* ============================================
+               设置面板 - 模态框
+            ============================================ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1500;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.15s ease;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            width: 420px;
+            max-width: 90vw;
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            animation: slideUp 0.2s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-card h2 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-card .modal-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+        }
+
+        .modal-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        .provider-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 8px;
+        }
+
+        .provider-option:hover {
+            border-color: var(--primary-light);
+            background: var(--primary-bg);
+        }
+
+        .provider-option.selected {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+
+        .provider-option input[type="radio"] {
+            margin-top: 3px;
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .provider-option .provider-info {
+            flex: 1;
+        }
+
+        .provider-option .provider-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .provider-option .provider-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .provider-option .provider-status {
+            font-size: 11px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .provider-option .provider-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .provider-option .provider-status .dot.green { background: var(--success); }
+        .provider-option .provider-status .dot.yellow { background: var(--warning); }
+        .provider-option .provider-status .dot.gray { background: var(--text-light); }
+
+        .api-key-input {
+            margin-top: 4px;
+            display: none;
+        }
+
+        .api-key-input.show {
+            display: block;
+        }
+
+        .api-key-input label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .api-key-input .input-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .api-key-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .api-key-input input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79,70,229,0.08);
+        }
+
+        .btn-test {
+            padding: 8px 14px;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        .btn-test:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-test:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .modal-actions button {
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-cancel {
+            background: var(--bg);
+            color: var(--text-secondary);
+        }
+
+        .btn-cancel:hover {
+            background: var(--border);
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-save.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .save-result {
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            display: none;
+        }
+
+        .save-result.success {
+            display: block;
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .save-result.error {
+            display: block;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏遮罩（移动端） -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <!-- ========== 侧边栏 ========== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>
+                    <span class="logo-icon">🏢</span>
+                    知识问答
+                </h1>
+                <p>重庆工程学院 · 智能问答系统</p>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="btn-new-chat" onclick="createNewSession()">
+                    <span>＋</span> 新建会话
+                </button>
+                <button class="btn-reload" id="btnReload" onclick="reloadKnowledge()" title="重新加载知识库">
+                    ↻
+                </button>
+            </div>
+
+            <div class="session-list" id="sessionList">
+                <div class="session-empty">
+                    <div class="empty-icon">💬</div>
+                    <div>暂无会话，点击上方按钮创建</div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                LLM 模式: <span id="llmModeLabel">模拟模式</span>
+            </div>
+        </aside>
+
+        <!-- ========== 主聊天区域 ========== -->
+        <main class="main-area">
+            <!-- 顶部栏 -->
+            <div class="chat-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+                    <span class="status-dot" id="statusDot"></span>
+                    <div>
+                        <div class="header-title">RAG 智能问答</div>
+                        <div class="header-subtitle" id="headerSubtitle">基于企业私有知识库</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="header-badge" id="modeBadge">🔄 加载中...</div>
+                    <button class="btn-settings" onclick="openSettings()" title="切换 AI 模型">⚙️</button>
+                </div>
+            </div>
+
+            <!-- 消息列表 -->
+            <div class="messages-container" id="messagesContainer">
+                <div class="welcome-message" id="welcomeMessage">
+                    <div class="welcome-icon">🏢</div>
+                    <h2>重庆工程学院知识问答</h2>
+                    <p>
+                        学校概况 · 院系专业 · 招生信息 · 校园生活 · 联系方式<br>
+                        涵盖11个学院、30个本科专业的最新信息
+                    </p>
+                    <div class="suggestion-chips">
+                        <button class="suggestion-chip" onclick="sendSuggestion('介绍一下重庆工程学院')">
+                            🏛 学校概况
+                        </button>
+                        <button class="suggestion-chip" onclick="sendSuggestion('学校有哪些学院和专业？')">
+                            📚 院系与专业
+                        </button>
+                        <button class="suggestion-chip" onclick="sendSuggestion('招生电话是多少？学费多少？')">
+                            📞 招生与学费
+                        </button>
+                        <button class="suggestion-chip" onclick="sendSuggestion('宿舍条件和食堂怎么样？')">
+                            🛏 校园生活
+                        </button>
+                        <button class="suggestion-chip" onclick="sendSuggestion('学校地址在哪里？')">
+                            📍 地址与联系方式
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea
+                        id="messageInput"
+                        rows="1"
+                        placeholder="输入您的问题，例如：重庆工程学院有哪些专业？"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResize(this)"
+                    ></textarea>
+                    <button class="btn-send" id="sendBtn" onclick="sendMessage()" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <span>按 Enter 发送，Shift+Enter 换行</span>
+                    <span id="sessionCount">当前会话: -</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ========== AI 模型设置模态框 ========== -->
+    <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+        <div class="modal-card">
+            <h2>⚙️ AI 模型设置</h2>
+            <div class="modal-subtitle">选择问答系统使用的 AI 模型</div>
+            <div class="modal-divider"></div>
+
+            <!-- 本地 Ollama -->
+            <div class="provider-option" id="optOllama" onclick="selectProvider('ollama')">
+                <input type="radio" name="provider" value="ollama" onchange="selectProvider('ollama')">
+                <div class="provider-info">
+                    <div class="provider-name">💻 本地模型 (Ollama)</div>
+                    <div class="provider-desc">Ollama · qwen2.5:7b · 完全离线，数据不出本机</div>
+                    <div class="provider-status" id="statusOllama">
+                        <span class="dot green"></span> 运行中
+                    </div>
+                </div>
+            </div>
+
+            <!-- DeepSeek API -->
+            <div class="provider-option" id="optOpenAI" onclick="selectProvider('openai')">
+                <input type="radio" name="provider" value="openai" onchange="selectProvider('openai')">
+                <div class="provider-info">
+                    <div class="provider-name">☁️ DeepSeek API</div>
+                    <div class="provider-desc">云端大模型，需要 API Key，效果更强</div>
+                    <div class="provider-status" id="statusOpenAI">
+                        <span class="dot" id="apiStatusDot"></span>
+                        <span id="apiStatusText">未配置</span>
+                    </div>
+                    <div class="api-key-input" id="apiKeyInput">
+                        <label>DeepSeek API Key</label>
+                        <div class="input-row">
+                            <input type="password" id="apiKeyField" placeholder="sk-..." autocomplete="off">
+                            <button class="btn-test" id="btnTestKey" onclick="testApiKey()">测试连接</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-divider"></div>
+            <div class="save-result" id="saveResult"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeSettings()">取消</button>
+                <button class="btn-save" id="btnSaveConfig" onclick="saveConfig()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 全局状态
+        // ============================================
+        let currentSessionId = '';
+        let isProcessing = false;
+
+        // ============================================
+        // 初始化
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            createNewSession();
+            loadSessionList();
+            checkHealth();
+        });
+
+        // ============================================
+        // 侧边栏控制
+        // ============================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar.classList.toggle('open');
+            backdrop.classList.toggle('show');
+        }
+
+        document.getElementById('sidebarBackdrop').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('open');
+            this.classList.remove('show');
+        });
+
+        // ============================================
+        // 会话管理
+        // ============================================
+        async function createNewSession() {
+            try {
+                const resp = await fetch('/api/session/create', { method: 'POST' });
+                const data = await resp.json();
+                currentSessionId = data.session_id;
+
+                // 清空消息列表，但保留 welcomeMessage 元素
+                const container = document.getElementById('messagesContainer');
+                const welcome = document.getElementById('welcomeMessage');
+                Array.from(container.children).forEach(child => {
+                    if (child !== welcome) child.remove();
+                });
+                // 确保 welcomeMessage 在 container 内且可见
+                if (welcome.parentNode !== container) {
+                    container.appendChild(welcome);
+                }
+                welcome.style.display = 'block';
+
+                document.getElementById('messageInput').value = '';
+                document.getElementById('sessionCount').textContent = `当前会话: ${currentSessionId.slice(0, 8)}...`;
+                await loadSessionList();
+                // 关闭侧边栏（移动端）
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarBackdrop').classList.remove('show');
+            } catch (err) {
+                showToast('创建会话失败', 'error');
+            }
+        }
+
+        async function switchSession(sessionId) {
+            if (isProcessing) return;
+            currentSessionId = sessionId;
+            document.getElementById('sessionCount').textContent = `当前会话: ${sessionId.slice(0, 8)}...`;
+
+            try {
+                const resp = await fetch(`/api/session/${sessionId}/history`);
+                const data = await resp.json();
+                renderMessages(data.messages || []);
+            } catch (err) {
+                showToast('加载会话历史失败', 'error');
+            }
+
+            // 更新激活状态
+            document.querySelectorAll('.session-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.sessionId === sessionId);
+            });
+
+            // 关闭侧边栏（移动端）
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarBackdrop').classList.remove('show');
+        }
+
+        async function loadSessionList() {
+            try {
+                const resp = await fetch('/api/session/list');
+                const sessions = await resp.json();
+                const list = document.getElementById('sessionList');
+
+                if (!sessions || sessions.length === 0) {
+                    list.innerHTML = `
+                        <div class="session-empty">
+                            <div class="empty-icon">💬</div>
+                            <div>暂无会话，点击上方按钮创建</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = sessions.map(s => `
+                    <div class="session-item ${s.session_id === currentSessionId ? 'active' : ''}"
+                         data-session-id="${s.session_id}"
+                         onclick="switchSession('${s.session_id}')">
+                        <div class="session-title">${escapeHtml(s.preview || '新会话')}</div>
+                        <div class="session-meta">
+                            <span>${s.message_count} 条消息</span>
+                            <span>${formatTime(s.updated_at)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('加载会话列表失败:', err);
+            }
+        }
+
+        // ============================================
+        // 健康检查 & 配置状态
+        // ============================================
+        async function checkHealth() {
+            try {
+                const resp = await fetch('/api/config');
+                const cfg = await resp.json();
+                updateModeDisplay(cfg);
+            } catch (err) {
+                console.error('获取配置失败:', err);
+            }
+        }
+
+        function updateModeDisplay(cfg) {
+            // 侧边栏底部
+            const modeMap = {
+                ollama: `💻 本地 Ollama`,
+                openai: `☁️ DeepSeek API`,
+                mock: `🔄 模拟模式`,
+            };
+            document.getElementById('llmModeLabel').textContent = modeMap[cfg.provider] || cfg.provider;
+
+            // 头部徽章
+            const badge = document.getElementById('modeBadge');
+            const labelMap = {
+                ollama: `💻 ${cfg.model}`,
+                openai: `☁️ DeepSeek`,
+                mock: `🔄 模拟模式`,
+            };
+            badge.textContent = labelMap[cfg.provider] || cfg.provider;
+            badge.className = `header-badge${cfg.provider === 'mock' ? ' mock' : ''}`;
+
+            // 副标题
+            const subtitleMap = {
+                ollama: `✅ 本地 Ollama · ${cfg.model} · 完全离线`,
+                openai: `☁️ DeepSeek API · ${cfg.has_api_key ? '已配置 Key' : '未配置 Key'}`,
+                mock: `⚠️ 模拟模式 · 仅模板回答，无 AI 能力`,
+            };
+            document.getElementById('headerSubtitle').textContent =
+                subtitleMap[cfg.provider] || `LLM: ${cfg.provider}`;
+        }
+
+        // ============================================
+        // 发送消息
+        // ============================================
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            document.getElementById('sendBtn').disabled = !textarea.value.trim();
+        }
+
+        function sendSuggestion(text) {
+            document.getElementById('messageInput').value = text;
+            autoResize(document.getElementById('messageInput'));
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message || isProcessing) return;
+
+            // 隐藏欢迎页
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            if (welcomeMsg) welcomeMsg.style.display = 'none';
+
+            // 显示用户消息
+            appendMessage('user', message);
+            input.value = '';
+            autoResize(input);
+            document.getElementById('sendBtn').disabled = true;
+
+            // 显示打字指示器
+            const typingDiv = showTypingIndicator();
+
+            isProcessing = true;
+            updateStatus('loading');
+
+            try {
+                const resp = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        message: message,
+                    }),
+                });
+
+                if (!resp.ok) {
+                    const errData = await resp.json();
+                    throw new Error(errData.detail || '请求失败');
+                }
+
+                const data = await resp.json();
+
+                // 移除打字指示器
+                typingDiv.remove();
+
+                // 更新 sessionId（如果服务端返回了新的）
+                if (data.session_id) {
+                    currentSessionId = data.session_id;
+                    document.getElementById('sessionCount').textContent = `当前会话: ${currentSessionId.slice(0, 8)}...`;
+                }
+
+                // 显示机器人回答
+                appendBotMessage(data);
+
+                // 刷新会话列表
+                await loadSessionList();
+
+            } catch (err) {
+                typingDiv.remove();
+                appendMessage('bot', `抱歉，处理您的问题时出现错误: ${err.message}`);
+                showToast('发送失败: ' + err.message, 'error');
+            } finally {
+                isProcessing = false;
+                updateStatus('idle');
+                document.getElementById('sendBtn').disabled = !document.getElementById('messageInput').value.trim();
+            }
+        }
+
+        // ============================================
+        // 消息渲染
+        // ============================================
+        function appendMessage(role, content) {
+            const container = document.getElementById('messagesContainer');
+            // 隐藏欢迎页（如果可见）
+            const welcome = document.getElementById('welcomeMessage');
+            if (welcome) welcome.style.display = 'none';
+
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerHTML = `
+                <div class="avatar">${role === 'user' ? '👤' : '🤖'}</div>
+                <div class="bubble">
+                    <div class="message-content">${escapeHtml(content)}</div>
+                </div>
+            `;
+            container.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+
+        function appendBotMessage(data) {
+            const container = document.getElementById('messagesContainer');
+            const welcome = document.getElementById('welcomeMessage');
+            if (welcome) welcome.style.display = 'none';
+
+            const div = document.createElement('div');
+            div.className = 'message bot';
+
+            let metaHtml = '';
+            if (data.intent && data.intent !== 'general') {
+                metaHtml += `<span class="tag tag-intent">🎯 ${escapeHtml(data.intent_label || data.intent)}</span>`;
+            }
+            if (data.tools_used && data.tools_used.length > 0) {
+                metaHtml += data.tools_used.map(t =>
+                    `<span class="tag tag-tool">🔧 ${escapeHtml(t)}</span>`
+                ).join('');
+            }
+
+            div.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble">
+                    <div class="message-content">${escapeHtml(data.reply)}</div>
+                    <div class="message-meta">${metaHtml}</div>
+                </div>
+            `;
+            container.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            const welcome = document.getElementById('welcomeMessage');
+
+            // 清空消息容器，但保留 welcomeMessage
+            Array.from(container.children).forEach(child => {
+                if (child !== welcome) child.remove();
+            });
+            // 确保 welcomeMessage 在容器内
+            if (welcome && welcome.parentNode !== container) {
+                container.appendChild(welcome);
+            }
+
+            if (!messages || messages.length === 0) {
+                if (welcome) welcome.style.display = 'block';
+                return;
+            }
+
+            if (welcome) welcome.style.display = 'none';
+
+            for (const msg of messages) {
+                if (msg.role === 'user') {
+                    appendMessage('user', msg.content);
+                } else if (msg.role === 'assistant') {
+                    appendBotMessage({
+                        reply: msg.content,
+                        intent: msg.intent || 'general',
+                        intent_label: msg.intent_label || '',
+                        tools_used: msg.tools_used || [],
+                        sources: msg.sources || [],
+                    });
+                }
+            }
+
+            scrollToBottom();
+        }
+
+        // ============================================
+        // 打字指示器
+        // ============================================
+        function showTypingIndicator() {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.className = 'message bot';
+            div.id = 'typingIndicator';
+            div.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+
+        // ============================================
+        // 知识库重载
+        // ============================================
+        async function reloadKnowledge() {
+            const btn = document.getElementById('btnReload');
+            btn.classList.add('loading');
+            btn.textContent = '⏳';
+
+            try {
+                const resp = await fetch('/api/knowledge/reload', { method: 'POST' });
+                const data = await resp.json();
+                showToast(`知识库已更新: ${data.doc_count} 个文档, ${data.chunk_count} 个片段`, 'success');
+                await checkHealth();
+            } catch (err) {
+                showToast('知识库重载失败: ' + err.message, 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.textContent = '↻';
+            }
+        }
+
+        // ============================================
+        // 工具函数
+        // ============================================
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+        }
+
+        function updateStatus(state) {
+            const dot = document.getElementById('statusDot');
+            dot.className = `status-dot ${state === 'loading' ? 'loading' : ''}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(isoStr) {
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            const now = new Date();
+            const diff = now - d;
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // ============================================
+        // 键盘快捷键: Ctrl+Enter 发送 (备用)
+        // ============================================
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // ============================================
+        // AI 模型设置面板
+        // ============================================
+        let currentProvider = 'ollama';
+        let configHasApiKey = false;
+
+        async function openSettings() {
+            document.getElementById('settingsModal').classList.add('show');
+            document.getElementById('saveResult').style.display = 'none';
+
+            // 加载当前配置
+            try {
+                const resp = await fetch('/api/config');
+                const cfg = await resp.json();
+                currentProvider = cfg.provider;
+                configHasApiKey = cfg.has_api_key;
+                selectProvider(cfg.provider);
+
+                // 更新状态指示
+                // Ollama 状态（默认绿色，假设可用）
+                // DeepSeek API 状态
+                const apiDot = document.getElementById('apiStatusDot');
+                const apiText = document.getElementById('apiStatusText');
+                if (cfg.has_api_key) {
+                    apiDot.className = 'dot green';
+                    apiText.textContent = '已配置 Key';
+                } else {
+                    apiDot.className = 'dot gray';
+                    apiText.textContent = '未配置 Key';
+                }
+            } catch (err) {
+                console.error('加载配置失败:', err);
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+            document.getElementById('saveResult').style.display = 'none';
+        }
+
+        function selectProvider(provider) {
+            currentProvider = provider;
+
+            // 更新选中样式
+            document.querySelectorAll('.provider-option').forEach(el => {
+                el.classList.toggle('selected', el.id === 'opt' + capitalize(provider));
+            });
+
+            // 选中对应的 radio
+            document.querySelector(`input[name="provider"][value="${provider}"]`).checked = true;
+
+            // DeepSeek 选中时显示 API Key 输入框
+            const apiInput = document.getElementById('apiKeyInput');
+            if (provider === 'openai') {
+                apiInput.classList.add('show');
+                // 如果已有 Key，自动填入（从后端获取的显示为已配置）
+                // 出于安全，不把 Key 返回前端，但用户可以看到状态
+            } else {
+                apiInput.classList.remove('show');
+            }
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        async function saveConfig() {
+            const btn = document.getElementById('btnSaveConfig');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+            document.getElementById('saveResult').style.display = 'none';
+
+            try {
+                const apiKey = document.getElementById('apiKeyField').value.trim();
+
+                const resp = await fetch('/api/config/llm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: currentProvider,
+                        api_key: apiKey,
+                    }),
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || '保存失败');
+                }
+
+                const result = await resp.json();
+
+                // 显示成功
+                const saveResult = document.getElementById('saveResult');
+                saveResult.className = 'save-result success';
+                const providerLabel = result.provider === 'ollama' ? '本地 Ollama 模型' : 'DeepSeek API';
+                saveResult.textContent = `✅ 已切换到 ${providerLabel}`;
+                saveResult.style.display = 'block';
+
+                // 清空 API Key 输入框（安全）
+                document.getElementById('apiKeyField').value = '';
+
+                // 更新界面显示
+                const cfg = await (await fetch('/api/config')).json();
+                updateModeDisplay(cfg);
+
+                // 更新模态框内的状态
+                configHasApiKey = cfg.has_api_key;
+                const apiDot = document.getElementById('apiStatusDot');
+                const apiText = document.getElementById('apiStatusText');
+                if (cfg.has_api_key) {
+                    apiDot.className = 'dot green';
+                    apiText.textContent = '已配置 Key';
+                } else {
+                    apiDot.className = 'dot gray';
+                    apiText.textContent = '未配置 Key';
+                }
+
+                setTimeout(() => {
+                    closeSettings();
+                }, 1200);
+
+            } catch (err) {
+                const saveResult = document.getElementById('saveResult');
+                saveResult.className = 'save-result error';
+                saveResult.textContent = `❌ ${err.message}`;
+                saveResult.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '保存';
+            }
+        }
+
+        async function testApiKey() {
+            const apiKey = document.getElementById('apiKeyField').value.trim();
+            if (!apiKey) {
+                showToast('请先输入 API Key', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btnTestKey');
+            btn.disabled = true;
+            btn.textContent = '测试中...';
+
+            try {
+                // 发一条简单请求测试 Key 是否有效
+                // 先临时切换到 openai 模式测试
+                const resp = await fetch('/api/config/llm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: 'openai',
+                        api_key: apiKey,
+                    }),
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || '连接失败');
+                }
+
+                // 发一条测试消息检查是否真的能回答
+                const testResp = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId || 'test',
+                        message: '你好，回复"连接成功"即可',
+                    }),
+                });
+
+                if (!testResp.ok) {
+                    throw new Error('API 返回异常');
+                }
+
+                const testData = await testResp.json();
+                if (testData.reply && !testData.reply.includes('抱歉')) {
+                    showToast('✅ DeepSeek API 连接成功！', 'success');
+                    document.getElementById('apiStatusDot').className = 'dot green';
+                    document.getElementById('apiStatusText').textContent = '连接成功 ✓';
+
+                    // 用测试结果更新显示
+                    const cfg = await (await fetch('/api/config')).json();
+                    updateModeDisplay(cfg);
+                } else {
+                    showToast('⚠️ API 已连接但返回异常，请检查 Key', 'warning');
+                }
+
+            } catch (err) {
+                showToast('❌ 连接失败: ' + err.message, 'error');
+                document.getElementById('apiStatusDot').className = 'dot yellow';
+                document.getElementById('apiStatusText').textContent = '连接失败';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '测试连接';
+            }
+        }
+    </script>
+</body>
+</html>
